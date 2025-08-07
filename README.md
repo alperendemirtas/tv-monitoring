@@ -25,7 +25,7 @@ Dashboard http://localhost:5173 adresinde çalışacak.
 
 ### Production Deployment (Ubuntu)
 ```bash
-wget https://raw.githubusercontent.com/YOUR_USERNAME/haus-monitoring/main/deploy-ubuntu.sh
+wget https://raw.githubusercontent.com/alperendemirtas/tv-monitoring/main/deploy-ubuntu.sh
 chmod +x deploy-ubuntu.sh
 ./deploy-ubuntu.sh
 ```
@@ -86,7 +86,7 @@ npm run preview      # Preview production build
 ## 📂 Proje Yapısı
 
 ```
-haus-monitoring/
+tv-monitoring/
 ├── src/
 │   ├── App.jsx         # Ana component
 │   ├── App.css         # Styling
@@ -101,7 +101,7 @@ haus-monitoring/
 
 Ubuntu server'da:
 ```bash
-cd /home/ubuntu/haus-monitoring
+cd /home/ubuntu/tv-monitoring
 ./update-dashboard.sh
 ```
 
@@ -111,7 +111,7 @@ Otomatik sağlık kontrolü:
 ```bash
 crontab -e
 # Add:
-*/5 * * * * /home/ubuntu/haus-monitoring/health-check.sh
+*/5 * * * * /home/ubuntu/tv-monitoring/health-check.sh
 ```
 
 ## 🎯 TV Kurulum Önerileri

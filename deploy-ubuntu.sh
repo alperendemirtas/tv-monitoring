@@ -21,8 +21,8 @@ echo "Nginx version: $(nginx -v)"
 # Clone project
 echo "📥 Cloning TV Monitoring Dashboard from GitHub..."
 cd /home/ubuntu
-git clone https://github.com/YOUR_USERNAME/haus-monitoring.git
-cd haus-monitoring
+git clone https://github.com/alperendemirtas/tv-monitoring.git
+cd tv-monitoring
 
 # Install dependencies
 echo "📦 Installing project dependencies..."
@@ -42,7 +42,7 @@ server {
     listen 80;
     server_name _;
     
-    root /home/ubuntu/haus-monitoring/dist;
+    root /home/ubuntu/tv-monitoring/dist;
     index index.html;
     
     # React router support
@@ -105,8 +105,8 @@ sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
 # Set correct permissions
-sudo chown -R www-data:www-data /home/ubuntu/haus-monitoring/dist
-sudo chmod -R 755 /home/ubuntu/haus-monitoring/dist
+sudo chown -R www-data:www-data /home/ubuntu/tv-monitoring/dist
+sudo chmod -R 755 /home/ubuntu/tv-monitoring/dist
 
 # Final status check
 echo "📊 Final status check..."
@@ -127,4 +127,4 @@ echo "4. Enter your Sensibo API key"
 echo "5. Click 'Kaydet' to save settings"
 echo ""
 echo "🔄 To update later, run:"
-echo "   cd /home/ubuntu/haus-monitoring && ./update-dashboard.sh"
+echo "   cd /home/ubuntu/tv-monitoring && ./update-dashboard.sh"

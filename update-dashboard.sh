@@ -3,7 +3,7 @@
 
 echo "🔄 Updating TV Monitoring Dashboard..."
 
-cd /home/ubuntu/haus-monitoring
+cd /home/ubuntu/tv-monitoring
 
 # Backup current build
 echo "💾 Creating backup..."
@@ -38,8 +38,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # Set correct permissions
-sudo chown -R www-data:www-data /home/ubuntu/haus-monitoring/dist
-sudo chmod -R 755 /home/ubuntu/haus-monitoring/dist
+sudo chown -R www-data:www-data /home/ubuntu/tv-monitoring/dist
+sudo chmod -R 755 /home/ubuntu/tv-monitoring/dist
 
 # Test nginx configuration
 sudo nginx -t

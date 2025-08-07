@@ -14,7 +14,7 @@ ssh -i your-key.pem ubuntu@your-server-ip
 ### 2. Deploy Script'ini İndirin ve Çalıştırın
 ```bash
 # Deploy script'ini indir
-wget https://raw.githubusercontent.com/YOUR_USERNAME/haus-monitoring/main/deploy-ubuntu.sh
+wget https://raw.githubusercontent.com/alperendemirtas/tv-monitoring/main/deploy-ubuntu.sh
 
 # Çalıştırılabilir yap
 chmod +x deploy-ubuntu.sh
@@ -23,7 +23,7 @@ chmod +x deploy-ubuntu.sh
 ./deploy-ubuntu.sh
 ```
 
-**Not:** `YOUR_USERNAME` kısmını GitHub kullanıcı adınızla değiştirin!
+**Not:** GitHub repository: `https://github.com/alperendemirtas/tv-monitoring`
 
 ### 3. Dashboard'u Açın
 Script tamamlandıktan sonra:
@@ -45,7 +45,7 @@ adresinden dashboard'unuza erişebilirsiniz.
 Kodunuzda değişiklik yaptıktan sonra:
 
 ```bash
-cd /home/ubuntu/haus-monitoring
+cd /home/ubuntu/tv-monitoring
 ./update-dashboard.sh
 ```
 
@@ -58,8 +58,8 @@ Sistem otomatik olarak dashboard'un çalışıp çalışmadığını kontrol ets
 crontab -e
 
 # Bu satırları ekle:
-*/5 * * * * /home/ubuntu/haus-monitoring/health-check.sh
-0 2 * * * /home/ubuntu/haus-monitoring/update-dashboard.sh
+*/5 * * * * /home/ubuntu/tv-monitoring/health-check.sh
+0 2 * * * /home/ubuntu/tv-monitoring/update-dashboard.sh
 ```
 
 ## 📊 TV Optimizasyonu
@@ -91,10 +91,10 @@ sudo systemctl restart nginx
 ### API Verileri Gelmiyor
 ```bash
 # Build klasörünü kontrol et
-ls -lah /home/ubuntu/haus-monitoring/dist
+ls -lah /home/ubuntu/tv-monitoring/dist
 
 # Projeyi yeniden build et
-cd /home/ubuntu/haus-monitoring
+cd /home/ubuntu/tv-monitoring
 npm run build
 sudo systemctl restart nginx
 ```
@@ -151,7 +151,7 @@ Dashboard mobil cihazlardan da erişilebilir:
 
 ### Backup'tan Geri Yükleme
 ```bash
-cd /home/ubuntu/haus-monitoring
+cd /home/ubuntu/tv-monitoring
 
 # Mevcut backup'ları listele
 ls -la dist.backup.*
@@ -165,7 +165,7 @@ sudo systemctl restart nginx
 ### Sıfırdan Kurulum
 ```bash
 # Projeyi sil ve yeniden kur
-sudo rm -rf /home/ubuntu/haus-monitoring
+sudo rm -rf /home/ubuntu/tv-monitoring
 ./deploy-ubuntu.sh
 ```
 

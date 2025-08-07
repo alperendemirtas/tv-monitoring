@@ -26,7 +26,7 @@ fi
 if ! curl -f -s $DASHBOARD_URL >/dev/null 2>&1; then
     log_message "⚠️ Dashboard not accessible, attempting to rebuild..."
     
-    cd /home/ubuntu/haus-monitoring
+    cd /home/ubuntu/tv-monitoring
     
     # Try to rebuild
     if npm run build >/dev/null 2>&1; then

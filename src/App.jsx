@@ -34,49 +34,37 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sunucudan ayarları çek (TV için)
+  // Sunucudan ayarları çek (TV için) - Basitleştirilmiş versiyon
   const fetchConfigFromServer = async () => {
     try {
-      const response = await fetch(`http://${serverIp}:3001/api/config`)
-      const data = await response.json()
+      // Önce localStorage'dan kontrol et
+      const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+      const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
       
-      if (data.success && data.config) {
-        const { opmanagerUrl: serverOpmanager, sensiboApiKey: serverSensibo } = data.config
-        
-        if (serverOpmanager || serverSensibo) {
-          if (serverOpmanager) setOpmanagerUrl(serverOpmanager)
-          if (serverSensibo) setSensiboApiKey(serverSensibo)
-          setIsConfigured(true)
-          return true
-        }
+      if (savedOpmanagerUrl || savedSensiboApiKey) {
+        setOpmanagerUrl(savedOpmanagerUrl)
+        setSensiboApiKey(savedSensiboApiKey)
+        setIsConfigured(true)
+        return true
       }
       return false
     } catch (err) {
-      console.error('Sunucudan config alınamadı:', err)
+      console.error('Config yüklenemedi:', err)
       return false
     } finally {
       setConfigLoading(false)
     }
   }
 
-  // Ayarları sunucuya kaydet (Kullanıcının bilgisayarı için)
+  // Ayarları sunucuya kaydet - Basitleştirilmiş (sadece localStorage)
   const saveConfigToServer = async (opmanager, sensibo) => {
     try {
-      const response = await fetch(`http://${serverIp}:3001/api/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          opmanagerUrl: opmanager,
-          sensiboApiKey: sensibo
-        })
-      })
-
-      const data = await response.json()
-      return data.success
+      // Sadece localStorage'a kaydet
+      localStorage.setItem('opmanagerUrl', opmanager)
+      localStorage.setItem('sensiboApiKey', sensibo)
+      return true
     } catch (err) {
-      console.error('Sunucuya config kaydedilemedi:', err)
+      console.error('LocalStorage\'a kaydedilemedi:', err)
       return false
     }
   }
@@ -98,7 +86,7 @@ function App() {
         return
       }
 
-      // Sunucudan ayarları çekmeye çalış
+      // Sunucudan ayarları çekmeye çalış (sadece localStorage)
       const serverConfigLoaded = await fetchConfigFromServer()
       
       if (!serverConfigLoaded) {
@@ -115,14 +103,20 @@ function App() {
     initializeConfig()
   }, [serverIp])
 
-  // Ayarları kontrol etmek için polling (TV için)
+  // Ayarları kontrol etmek için polling - Basitleştirilmiş
   useEffect(() => {
     let configInterval
     
     if (!isConfigured) {
       configInterval = setInterval(async () => {
-        const configLoaded = await fetchConfigFromServer()
-        if (configLoaded) {
+        // Sadece localStorage'u kontrol et
+        const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+        const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
+        
+        if (savedOpmanagerUrl || savedSensiboApiKey) {
+          setOpmanagerUrl(savedOpmanagerUrl)
+          setSensiboApiKey(savedSensiboApiKey)
+          setIsConfigured(true)
           clearInterval(configInterval)
         }
       }, 5000) // 5 saniyede bir kontrol et
@@ -249,13 +243,9 @@ function App() {
     }
   }, [sensiboApiKey])
 
-  // Ayarları kaydet
+  // Ayarları kaydet - Basitleştirilmiş versiyon
   const handleSaveSettings = async () => {
-    // Önce localStorage'a kaydet
-    localStorage.setItem('opmanagerUrl', opmanagerUrl)
-    localStorage.setItem('sensiboApiKey', sensiboApiKey)
-    
-    // Sonra sunucuya kaydet
+    // localStorage'a kaydet
     const saved = await saveConfigToServer(opmanagerUrl, sensiboApiKey)
     
     if (saved) {
@@ -265,13 +255,9 @@ function App() {
         fetchSensiboData()
       }
       // Success feedback
-      alert('✅ Ayarlar başarıyla kaydedildi ve TV ekranına gönderildi!')
+      alert('✅ Ayarlar başarıyla kaydedildi!')
     } else {
-      // Hata durumunda sadece local olarak çalıştır
-      if (sensiboApiKey) {
-        fetchSensiboData()
-      }
-      alert('⚠️ Ayarlar yerel olarak kaydedildi, ancak sunucuya gönderilemedi.')
+      alert('❌ Ayarlar kaydedilemedi.')
     }
   }
 
@@ -303,16 +289,16 @@ function App() {
                 <li>Aynı ağdaki bir bilgisayardan tarayıcınızı açın</li>
                 <li>Aşağıdaki adrese gidin:</li>
                 <div className="config-url">
-                  http://{serverIp}:3000
+                  http://{serverIp}
                 </div>
                 <li>Ayarları doldurup "Kaydet" butonuna tıklayın</li>
-                <li>Bu ekran otomatik olarak güncellenecektir</li>
+                <li>Bu TV'de aynı tarayıcıyı kullanmalısınız (localStorage)</li>
               </ol>
             </div>
             
             <div className="polling-indicator">
               <div className="pulse"></div>
-              <span>Ayarlar kontrol ediliyor... (5 saniyede bir)</span>
+              <span>LocalStorage kontrol ediliyor... (5 saniyede bir)</span>
             </div>
             
             <div className="manual-config">

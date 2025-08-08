@@ -12,6 +12,7 @@ function App() {
   const [isConfigured, setIsConfigured] = useState(false)
   const [serverIp, setServerIp] = useState('')
   const [isTvMode, setIsTvMode] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false) // Settings modal kontrolü
 
   // TV mode tespiti - Büyük ekranlar için
   useEffect(() => {
@@ -434,7 +435,7 @@ function App() {
 
           {/* Sağ Kısım - Ayarlar */}
           <div className="settings-section">
-            <div className="settings-toggle" onClick={() => document.querySelector('.settings-content').classList.toggle('open')}>
+            <div className="settings-toggle" onClick={() => setShowSettingsModal(true)}>
               <div className="settings-icon">⚙️</div>
               <span>Ayarlar</span>
             </div>
@@ -462,7 +463,71 @@ function App() {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="settings-modal-overlay">
+          <div className="settings-modal">
+            <div className="modal-header">
+              <h2>⚙️ Sistem Ayarları</h2>
+              <button 
+                className="modal-close-button"
+                onClick={() => setShowSettingsModal(false)}
+                title="Kapat"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-content">
+              <div className="setting-group">
+                <label htmlFor="opmanager-input">OpManager Dashboard URL</label>
+                <input
+                  id="opmanager-input"
+                  type="text"
+                  placeholder="https://example.com/dashboard"
+                  value={opmanagerUrl}
+                  onChange={(e) => setOpmanagerUrl(e.target.value)}
+                  className="modal-input"
+                />
+                <small>Üst panelde görüntülenecek OpManager linkini girin</small>
+              </div>
+
+              <div className="setting-group">
+                <label htmlFor="sensibo-input">Sensibo API Anahtarı</label>
+                <input
+                  id="sensibo-input"
+                  type="password"
+                  placeholder="API anahtarınızı girin"
+                  value={sensiboApiKey}
+                  onChange={(e) => setSensiboApiKey(e.target.value)}
+                  className="modal-input"
+                />
+                <small>Sensibo cihaz verilerini almak için API anahtarı gerekli</small>
+              </div>
+
+              <div className="modal-actions">
+                <button 
+                  onClick={() => setShowSettingsModal(false)}
+                  className="modal-button secondary"
+                >
+                  İptal
+                </button>
+                <button 
+                  onClick={() => {
+                    handleSaveSettings();
+                    setShowSettingsModal(false);
+                  }}
+                  className="modal-button primary"
+                >
+                  Kaydet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
   )
 }
 

@@ -1,21 +1,30 @@
 #!/bin/bash
 echo "🔧 TV Monitoring Dashboard - Quick Fix Script"
 
-cd /home/ubuntu
+# Get current user and home directory
+USER_NAME=$(whoami)
+HOME_DIR=$(eval echo ~$USER_NAME)
+PROJECT_DIR="$HOME_DIR/tv-monitoring"
+
+echo "👤 Current user: $USER_NAME"
+echo "🏠 Home directory: $HOME_DIR"
+echo "📁 Project will be created at: $PROJECT_DIR"
+
+cd "$HOME_DIR"
 
 # Stop nginx
 sudo systemctl stop nginx
 
 # Clean up old installation
 echo "🧹 Cleaning up old installation..."
-sudo rm -rf tv-monitoring
+sudo rm -rf "$PROJECT_DIR"
 sudo rm -f /etc/nginx/sites-enabled/tv-monitoring
 sudo rm -f /etc/nginx/sites-available/tv-monitoring
 
 # Fresh clone
 echo "📥 Fresh clone from GitHub..."
-git clone https://github.com/alperendemirtas/tv-monitoring.git
-cd tv-monitoring
+git clone https://github.com/alperendemirtas/tv-monitoring.git "$PROJECT_DIR"
+cd "$PROJECT_DIR"
 
 # Install and build
 echo "📦 Installing dependencies..."
@@ -160,13 +169,13 @@ ls -la dist/
 
 # Create nginx config
 echo "⚙️ Creating Nginx configuration..."
-sudo tee /etc/nginx/sites-available/tv-monitoring > /dev/null << 'EOF'
+sudo tee /etc/nginx/sites-available/tv-monitoring > /dev/null << EOF
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
     
-    root /home/ubuntu/tv-monitoring/dist;
+    root $PROJECT_DIR/dist;
     index index.html index.htm;
     
     # Handle POST requests that should not be redirected
@@ -182,12 +191,12 @@ server {
     # Main location block - only for GET requests
     location / {
         # Only allow GET and HEAD methods for static content
-        if ($request_method !~ ^(GET|HEAD)$) {
+        if (\$request_method !~ ^(GET|HEAD)\$) {
             return 405;
         }
         
         # Try files first, then directories, finally fallback to index.html for React routing
-        try_files $uri $uri/ @fallback;
+        try_files \$uri \$uri/ @fallback;
         
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Pragma "no-cache";
@@ -197,7 +206,7 @@ server {
     # Fallback location for React routing
     location @fallback {
         # Double check this is a GET request
-        if ($request_method !~ ^(GET|HEAD)$) {
+        if (\$request_method !~ ^(GET|HEAD)\$) {
             return 405;
         }
         try_files /index.html =404;
@@ -208,16 +217,16 @@ server {
         proxy_pass https://home.sensibo.com/api/v2/;
         proxy_ssl_server_name on;
         proxy_set_header Host home.sensibo.com;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         
         # CORS headers
         add_header Access-Control-Allow-Origin * always;
         add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
         add_header Access-Control-Allow-Headers "Accept, Authorization, Content-Type, X-Requested-With" always;
         
-        if ($request_method = 'OPTIONS') {
+        if (\$request_method = 'OPTIONS') {
             add_header Access-Control-Allow-Origin * always;
             add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
             add_header Access-Control-Allow-Headers "Accept, Authorization, Content-Type, X-Requested-With" always;
@@ -228,10 +237,10 @@ server {
     }
     
     # Static files
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)\$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
-        try_files $uri =404;
+        try_files \$uri =404;
     }
     
     # Security headers
@@ -246,12 +255,12 @@ sudo ln -s /etc/nginx/sites-available/tv-monitoring /etc/nginx/sites-enabled/
 
 # Set correct permissions
 echo "🔧 Setting correct permissions..."
-if [ -d "/home/ubuntu/tv-monitoring/dist" ]; then
-    sudo chown -R www-data:www-data /home/ubuntu/tv-monitoring/dist
-    sudo chmod -R 755 /home/ubuntu/tv-monitoring/dist
+if [ -d "$PROJECT_DIR/dist" ]; then
+    sudo chown -R www-data:www-data "$PROJECT_DIR/dist"
+    sudo chmod -R 755 "$PROJECT_DIR/dist"
     echo "✅ Permissions set successfully"
 else
-    echo "❌ Cannot set permissions: dist folder not found!"
+    echo "❌ Cannot set permissions: dist folder not found at $PROJECT_DIR/dist!"
     echo "Build must have failed. Exiting..."
     exit 1
 fi
@@ -282,5 +291,5 @@ SERVER_IP=$(hostname -I | awk '{print $1}')
 echo ""
 echo "✅ Quick fix completed!"
 echo "🌐 Try accessing: http://$SERVER_IP"
-echo "📁 Files location: /home/ubuntu/tv-monitoring/dist/"
+echo "📁 Files location: $PROJECT_DIR/dist/"
 echo "📋 If still not working, check: sudo tail -f /var/log/nginx/error.log"

@@ -2,12 +2,75 @@
 
 echo "🔄 PHP tabanlı güncelleme başlıyor..."
 
-# Proje dizinine git
-cd /var/www/tv-monitoring
+# Proje dizinine git ve kontrol et
+echo "📂 Proje dizinine geçiliyor..."
+TARGET_DIR="/var/www/tv-monitoring"
 
-# Git güncellemesi
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "❌ $TARGET_DIR bulunamadı!"
+    echo "🔄 İlk kurulum yapılıyor..."
+    sudo mkdir -p /var/www/
+    cd /var/www/
+    sudo git clone https://github.com/alperendemirtas/tv-monitoring.git
+    sudo chown -R $(whoami):$(whoami) tv-monitoring
+fi
+
+cd "$TARGET_DIR" || {
+    echo "❌ $TARGET_DIR dizinine geçilemedi!"
+    exit 1
+}
+
+echo "✅ Çalışma dizini: $(pwd)"
+
+# Git güncellemesi ve doğrulama
 echo "📥 Git'den son değişiklikleri çekiyor..."
-git pull origin main
+
+# Önce git durumunu kontrol et
+echo "🔍 Git durumu kontrol ediliyor..."
+if [ ! -d ".git" ]; then
+    echo "❌ Bu bir git repository değil!"
+    echo "🔄 Repository yeniden klonlanıyor..."
+    cd /var/www/
+    sudo rm -rf tv-monitoring
+    sudo git clone https://github.com/alperendemirtas/tv-monitoring.git
+    cd tv-monitoring
+    sudo chown -R $(whoami):$(whoami) .
+else
+    echo "✅ Git repository mevcut"
+    
+    # Local değişiklikler varsa stash yap
+    if ! git diff-index --quiet HEAD --; then
+        echo "⚠️  Local değişiklikler tespit edildi, stash yapılıyor..."
+        git stash
+    fi
+    
+    # Pull yap
+    git pull origin main || {
+        echo "❌ Git pull başarısız, repository yeniden klonlanıyor..."
+        cd /var/www/
+        sudo rm -rf tv-monitoring
+        sudo git clone https://github.com/alperendemirtas/tv-monitoring.git
+        cd tv-monitoring
+        sudo chown -R $(whoami):$(whoami) .
+    }
+fi
+
+# Git pull sonrası dosya kontrolü
+echo "🔍 Git pull sonrası dosya kontrolü:"
+echo "📂 Proje klasörü içeriği:"
+ls -la
+echo ""
+echo "📂 api/ klasörü içeriği:"
+if [ -d "api" ]; then
+    ls -la api/
+else
+    echo "❌ api/ klasörü bulunamadı!"
+    echo "🔄 Git durumunu kontrol edelim:"
+    git status
+    echo "🌿 Mevcut branch:"
+    git branch
+    exit 1
+fi
 
 # React bağımlılıklarını güncelle
 echo "📦 React bağımlılıkları güncelleniyor..."

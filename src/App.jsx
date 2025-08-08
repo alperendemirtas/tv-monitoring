@@ -274,61 +274,10 @@ function App() {
     )
   }
 
-  // Yapılandırma bekleme ekranı (TV için)
+  // Yapılandırma bekleme ekranı (TV için) - Devre dışı, direkt ayarlar ekranı
   if (!isConfigured && !configLoading) {
-    return (
-      <div className="app">
-        <div className="config-waiting">
-          <div className="waiting-content">
-            <div className="tv-icon">📺</div>
-            <h1>TV Dashboard Yapılandırma Bekleniyor</h1>
-            
-            <div className="instructions">
-              <h3>Bu ekranı yapılandırmak için:</h3>
-              <ol>
-                <li>Aynı ağdaki bir bilgisayardan tarayıcınızı açın</li>
-                <li>Aşağıdaki adrese gidin:</li>
-                <div className="config-url">
-                  http://{serverIp}
-                </div>
-                <li>Ayarları doldurup "Kaydet" butonuna tıklayın</li>
-                <li>Bu TV'de aynı tarayıcıyı kullanmalısınız (localStorage)</li>
-              </ol>
-            </div>
-            
-            <div className="polling-indicator">
-              <div className="pulse"></div>
-              <span>LocalStorage kontrol ediliyor... (5 saniyede bir)</span>
-            </div>
-            
-            <div className="manual-config">
-              <details>
-                <summary>Manuel Ayar</summary>
-                <div className="manual-form">
-                  <input
-                    type="text"
-                    placeholder="OpManager URL"
-                    value={opmanagerUrl}
-                    onChange={(e) => setOpmanagerUrl(e.target.value)}
-                    className="manual-input"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Sensibo API Key"
-                    value={sensiboApiKey}
-                    onChange={(e) => setSensiboApiKey(e.target.value)}
-                    className="manual-input"
-                  />
-                  <button onClick={handleSaveSettings} className="manual-save-btn">
-                    Manuel Kaydet
-                  </button>
-                </div>
-              </details>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    // TV bekleme ekranı yerine direkt normal ekranı göster
+    // return ... (bu kısım kaldırıldı)
   }
 
   return (

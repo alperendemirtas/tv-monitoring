@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Dashboard URL Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #1a1a1a; 
+            color: #fff; 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #007acc; margin-bottom: 30px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #ccc; font-weight: bold; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            background: #333; 
+            border: 1px solid #555; 
+            color: #fff; 
+            border-radius: 4px; 
+            font-size: 14px;
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #007acc; 
+            border: none; 
+            color: #fff; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        button:hover { background: #005999; }
+        .result {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #4CAF50;
+            margin-top: 20px;
+        }
+        .result h3 { color: #4CAF50; margin-bottom: 15px; }
+        .url-output {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            border: 1px solid #555;
+            margin-bottom: 15px;
+        }
+        .copy-btn {
+            background: #4CAF50;
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+        }
+        .copy-btn:hover { background: #45a049; }
+        .instructions {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 { color: #2196F3; margin-bottom: 15px; }
+        .instructions ol { margin-left: 20px; }
+        .instructions li { margin-bottom: 8px; color: #ccc; }
+    </style>
+</head>
+<body>
+    <h1>📺 TV Monitoring Dashboard - URL Generator</h1>
+    
+    <div class="instructions">
+        <h3>🎯 Nasıl Kullanılır?</h3>
+        <ol>
+            <li>Aşağıdaki formu doldurun</li>
+            <li>"URL Oluştur" butonuna tıklayın</li>
+            <li>Oluşan URL'i kopyalayın</li>
+            <li>TV tarayıcısında bu URL'i açın</li>
+            <li>Ayarlar otomatik yüklenecek!</li>
+        </ol>
+    </div>
+
+    <form id="urlForm">
+        <div class="form-group">
+            <label for="serverIp">TV Dashboard Server IP:</label>
+            <input type="text" id="serverIp" placeholder="192.168.1.100" required>
+        </div>
+
+        <div class="form-group">
+            <label for="opmanagerUrl">OpManager URL:</label>
+            <input type="text" id="opmanagerUrl" placeholder="https://example.com/opmanager" required>
+        </div>
+
+        <div class="form-group">
+            <label for="sensiboKey">Sensibo API Anahtarı:</label>
+            <input type="password" id="sensiboKey" placeholder="your-sensibo-api-key" required>
+        </div>
+
+        <button type="submit">🚀 URL Oluştur</button>
+    </form>
+
+    <div id="result" class="result" style="display:none;">
+        <h3>✅ TV için Hazır URL:</h3>
+        <div id="generatedUrl" class="url-output"></div>
+        <button type="button" id="copyBtn" class="copy-btn">📋 Kopyala</button>
+        
+        <div style="margin-top: 15px; color: #aaa; font-size: 12px;">
+            <strong>💡 Not:</strong> Bu URL'i TV tarayıcısının adres çubuğuna yapıştırın. Ayarlar otomatik olarak yüklenecek ve kaydedilecek.
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('urlForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const serverIp = document.getElementById('serverIp').value;
+            const opmanagerUrl = document.getElementById('opmanagerUrl').value;
+            const sensiboKey = document.getElementById('sensiboKey').value;
+            
+            if (!serverIp || !opmanagerUrl || !sensiboKey) {
+                alert('Lütfen tüm alanları doldurun!');
+                return;
+            }
+            
+            // URL encode the parameters
+            const encodedOpmanager = encodeURIComponent(opmanagerUrl);
+            const encodedSensibo = encodeURIComponent(sensiboKey);
+            
+            // Generate the URL
+            const generatedUrl = `http://${serverIp}/?opmanager=${encodedOpmanager}&sensibo=${encodedSensibo}`;
+            
+            // Show result
+            document.getElementById('generatedUrl').textContent = generatedUrl;
+            document.getElementById('result').style.display = 'block';
+            
+            // Scroll to result
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const urlText = document.getElementById('generatedUrl').textContent;
+            navigator.clipboard.writeText(urlText).then(function() {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Kopyalandı!';
+                btn.style.background = '#4CAF50';
+                
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '#4CAF50';
+                }, 2000);
+            }).catch(function() {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = urlText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Kopyalandı!';
+                
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

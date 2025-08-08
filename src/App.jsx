@@ -25,13 +25,31 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sayfa yüklendiğinde localStorage'dan verileri oku
+  // Sayfa yüklendiğinde localStorage'dan ve URL parametrelerinden verileri oku
   useEffect(() => {
+    // URL parametrelerini kontrol et
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlOpmanager = urlParams.get('opmanager')
+    const urlSensibo = urlParams.get('sensibo')
+    
+    // Önce localStorage'dan oku
     const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
     const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
     
-    setOpmanagerUrl(savedOpmanagerUrl)
-    setSensiboApiKey(savedSensiboApiKey)
+    // URL parametresi varsa onu kullan ve kaydet
+    if (urlOpmanager) {
+      setOpmanagerUrl(decodeURIComponent(urlOpmanager))
+      localStorage.setItem('opmanagerUrl', decodeURIComponent(urlOpmanager))
+    } else {
+      setOpmanagerUrl(savedOpmanagerUrl)
+    }
+    
+    if (urlSensibo) {
+      setSensiboApiKey(urlSensibo)
+      localStorage.setItem('sensiboApiKey', urlSensibo)
+    } else {
+      setSensiboApiKey(savedSensiboApiKey)
+    }
   }, [])
 
   // Sensibo verilerini çek
@@ -289,6 +307,23 @@ function App() {
                 <button onClick={handleSaveSettings} className="save-button">
                   Kaydet
                 </button>
+                
+                {/* TV için kullanım talimatı */}
+                <div className="tv-instructions">
+                  <div className="tv-tip">
+                    📺 <strong>TV İçin Kolay Kurulum:</strong>
+                  </div>
+                  <div className="tv-tip-text">
+                    Bilgisayardan şu formatta link hazırla:<br/>
+                    <code>
+                      http://SERVER_IP/?opmanager=OPMANAGER_URL&sensibo=API_KEY
+                    </code>
+                  </div>
+                  <div className="tv-example">
+                    <strong>Örnek:</strong><br/>
+                    <small>http://192.168.1.100/?opmanager=https%3A//example.com&sensibo=abc123</small>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

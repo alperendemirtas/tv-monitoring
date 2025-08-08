@@ -132,13 +132,13 @@ function App() {
     }
   }, [sensiboApiKey])
 
-  // 5 dakikada bir otomatik yenile
+  // 1 dakikada bir otomatik yenile
   useEffect(() => {
     let interval
     if (sensiboApiKey) {
       interval = setInterval(() => {
         fetchSensiboData()
-      }, 5 * 60 * 1000) // 5 dakika
+      }, 60 * 1000) // 1 dakika
     }
 
     return () => {

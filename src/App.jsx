@@ -329,8 +329,8 @@ function App() {
       
       {/* Ana Dashboard Konteyneri */}
       <div className="dashboard-container">
-        {/* Sol Panel - OpManager (%80) */}
-        <div className="panel left-panel">
+        {/* Ana İçerik Alanı - OpManager (Tam Genişlik) */}
+        <div className="panel main-panel">
           {opmanagerUrl ? (
             <div className="iframe-container">
               <iframe
@@ -349,94 +349,94 @@ function App() {
           )}
         </div>
 
-        {/* Sağ Panel - Sensibo (%20) */}
-        <div className="panel right-panel">
-          <div className="sensibo-content">
-            {isLoading && (
-              <div className="loading">
-                <p>Yükleniyor...</p>
-              </div>
-            )}
-            
-            {error && (
-              <div className="error">
-                <p>{error}</p>
-              </div>
-            )}
-            
-            {sensiboData && sensiboData.length > 0 && !isLoading && !error && (
-              <div className="sensibo-data">
-                <div className="devices-header">
-                  <h3>Toplam {sensiboData.length} Cihaz</h3>
+        {/* Alt Bar - Sensibo Verileri + Ayarlar */}
+        <div className="bottom-bar">
+          {/* Sol Kısım - Sensibo Verileri */}
+          <div className="sensibo-section">
+            <div className="sensibo-content">
+              {isLoading && (
+                <div className="loading">
+                  <p>Yükleniyor...</p>
                 </div>
-                {sensiboData.map((device, index) => (
-                  <div key={device.id || index} className="device-card modern-card">
-                    <div className="device-card-header">
-                      <div className="device-title-row">
-                        <h4>{device.room?.name || `Cihaz ${index + 1}`}</h4>
-                      </div>
-                    </div>
-                    <div className="device-card-data">
-                      <div className="data-row temperature-row">
-                        <div className="data-label">
-                          <span className="data-icon">🌡️</span>
-                          Sıcaklık
-                        </div>
-                        <div className={`data-value temperature-value ${getTempCategory(device.temperature)}`}>
-                          {device.temperature ? 
-                            `${device.temperature.toFixed(1)}°C` : 
-                            'N/A'}
-                          {device.temperature && <div className="unit-label">Derece</div>}
+              )}
+              
+              {error && (
+                <div className="error">
+                  <p>{error}</p>
+                </div>
+              )}
+              
+              {sensiboData && sensiboData.length > 0 && !isLoading && !error && (
+                <div className="sensibo-data">
+                  {sensiboData.map((device, index) => (
+                    <div key={device.id || index} className="device-card modern-card">
+                      <div className="device-card-header">
+                        <div className="device-title-row">
+                          <h4>{device.room?.name || `Cihaz ${index + 1}`}</h4>
                         </div>
                       </div>
-                      <div className="data-row humidity-row">
-                        <div className="data-label">
-                          <span className="data-icon">💧</span>
-                          Nem
-                        </div>
-                        <div className="data-value humidity-value">
-                          {device.humidity ? 
-                            `${device.humidity.toFixed(0)}%` : 
-                            'N/A'}
-                          {device.humidity && <div className="unit-label">Yüzde</div>}
-                        </div>
-                      </div>
-                      {device.humidity && (
-                        <div className="humidity-gauge">
-                          <div className="gauge-track">
-                            <div 
-                              className={`gauge-fill ${getHumidityCategory(device.humidity)}`}
-                              style={{ width: `${Math.min(device.humidity, 100)}%` }}
-                            ></div>
+                      <div className="device-card-data">
+                        <div className="data-row temperature-row">
+                          <div className="data-label">
+                            <span className="data-icon">🌡️</span>
+                            Sıcaklık
                           </div>
-                          <div className="gauge-labels">
-                            <span>0%</span>
-                            <span>50%</span>
-                            <span>100%</span>
+                          <div className={`data-value temperature-value ${getTempCategory(device.temperature)}`}>
+                            {device.temperature ? 
+                              `${device.temperature.toFixed(1)}°C` : 
+                              'N/A'}
+                            {device.temperature && <div className="unit-label">Derece</div>}
                           </div>
                         </div>
-                      )}
+                        <div className="data-row humidity-row">
+                          <div className="data-label">
+                            <span className="data-icon">💧</span>
+                            Nem
+                          </div>
+                          <div className="data-value humidity-value">
+                            {device.humidity ? 
+                              `${device.humidity.toFixed(0)}%` : 
+                              'N/A'}
+                            {device.humidity && <div className="unit-label">Yüzde</div>}
+                          </div>
+                        </div>
+                        {device.humidity && (
+                          <div className="humidity-gauge">
+                            <div className="gauge-track">
+                              <div 
+                                className={`gauge-fill ${getHumidityCategory(device.humidity)}`}
+                                style={{ width: `${Math.min(device.humidity, 100)}%` }}
+                              ></div>
+                            </div>
+                            <div className="gauge-labels">
+                              <span>0%</span>
+                              <span>50%</span>
+                              <span>100%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  ))}
+                  <div className="last-update">
+                    Son Güncelleme: {new Date().toLocaleTimeString('tr-TR')}
                   </div>
-                ))}
-                <div className="last-update">
-                  Son Güncelleme: {new Date().toLocaleTimeString('tr-TR')}
                 </div>
-              </div>
-            )}
-            
-            {!sensiboApiKey && !isLoading && (
-              <div className="panel-placeholder">
-                <p>Sensibo API anahtarını ayarlardan girin</p>
-              </div>
-            )}
+              )}
+              
+              {!sensiboApiKey && !isLoading && (
+                <div className="no-data-message">
+                  <p>Sensibo API anahtarını ayarlardan girin</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Ayarlar Bölümü - Sağ Panel Alt Kısım */}
-          <div className="settings">
-            <div className="settings-handle">
-              <div className="settings-handle-icon">⚙️</div>
-              <div className="settings-handle-text">Ayarlar</div>
+          {/* Sağ Kısım - Ayarlar */}
+          <div className="settings-section">
+            <div className="settings-toggle" onClick={() => document.querySelector('.settings-content').classList.toggle('open')}>
+              <div className="settings-icon">⚙️</div>
+              <span>Ayarlar</span>
             </div>
             <div className="settings-content">
               <div className="settings-inputs">

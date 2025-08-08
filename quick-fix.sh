@@ -21,12 +21,31 @@ cd tv-monitoring
 echo "📦 Installing dependencies..."
 npm install
 
+if [ $? -ne 0 ]; then
+    echo "❌ npm install failed!"
+    exit 1
+fi
+
 echo "🔨 Building project..."
 npm run build
 
 # Check if build was successful
 if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
     echo "❌ Build failed! dist/index.html not found"
+    echo "🔍 Let's check what happened:"
+    echo "Current directory contents:"
+    ls -la
+    echo ""
+    echo "Node.js version:"
+    node -v
+    echo "NPM version:"
+    npm -v
+    echo ""
+    echo "Package.json contents:"
+    cat package.json
+    echo ""
+    echo "Trying to build again with verbose output:"
+    npm run build --verbose
     exit 1
 fi
 
@@ -120,8 +139,16 @@ EOF
 sudo ln -s /etc/nginx/sites-available/tv-monitoring /etc/nginx/sites-enabled/
 
 # Set correct permissions
-sudo chown -R www-data:www-data /home/ubuntu/tv-monitoring/dist
-sudo chmod -R 755 /home/ubuntu/tv-monitoring/dist
+echo "🔧 Setting correct permissions..."
+if [ -d "/home/ubuntu/tv-monitoring/dist" ]; then
+    sudo chown -R www-data:www-data /home/ubuntu/tv-monitoring/dist
+    sudo chmod -R 755 /home/ubuntu/tv-monitoring/dist
+    echo "✅ Permissions set successfully"
+else
+    echo "❌ Cannot set permissions: dist folder not found!"
+    echo "Build must have failed. Exiting..."
+    exit 1
+fi
 
 # Test nginx config
 echo "🔍 Testing Nginx configuration..."

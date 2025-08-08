@@ -1,18 +1,17 @@
-# TV İçin Çift Panelli Gözetim Ekranı
+# TV İçin Monitoring Dashboard
 
-# TV Monitoring Dashboard
-
-Modern React + Vite tabanlı TV monitoring dashboard'u. OpManager ve Sensibo verilerini tek ekranda gösterir.
+PHP tabanlı TV monitoring dashboard'u. OpManager ve Sensibo verilerini tek ekranda gösterir.
 
 ## ✨ Özellikler
 
-- **Split-screen Layout:** OpManager (%80) + Sensibo Climate Data (%20)
+- **Split-screen Layout:** OpManager (%80) + Sensibo Climate Data (%20)  
 - **TV Optimized:** Dark theme, büyük fontlar, tam ekran desteği
-- **Auto-refresh:** 5 dakikada bir otomatik veri güncelleme
+- **PHP Backend:** Node.js gerektirmez, basit kurulum
+- **Cross-device Sync:** .env dosyası ile tüm cihazlarda aynı ayarlar
+- **Auto-refresh:** 1 dakikada bir otomatik veri güncelleme
 - **Modern UI:** Gradient kartlar, animasyonlu göstergeler, renk kodlu veriler
-- **Responsive:** TV, desktop ve mobil uyumlu
-- **Persistent Settings:** localStorage ile ayar saklama
-- **Real-time Data:** Sensibo API entegrasyonu ile canlı veri
+- **URL Parameters:** TV'den kolay ayar yapma
+- **Persistent Settings:** PHP API + localStorage fallback
 
 ## 🚀 Hızlı Başlangıç
 
@@ -23,12 +22,29 @@ npm run dev
 ```
 Dashboard http://localhost:5173 adresinde çalışacak.
 
-### Production Deployment (Ubuntu)
+### Production Deployment (Ubuntu) - PHP Tabanlı
 ```bash
-wget https://raw.githubusercontent.com/alperendemirtas/tv-monitoring/main/deploy-ubuntu.sh
-chmod +x deploy-ubuntu.sh
-./deploy-ubuntu.sh
+# 1. Repo klonla
+sudo git clone https://github.com/alperendemirtas/tv-monitoring.git /var/www/tv-monitoring
+cd /var/www/tv-monitoring
+
+# 2. PHP tabanlı deploy
+chmod +x simple-update.sh
+./simple-update.sh
 ```
+
+## 🔧 Backend: PHP API
+
+**Artık Node.js gerektirmiyor!** 
+
+- **API Dosyası**: `/var/www/html/api/config.php`
+- **Endpoint**: `/api/config.php` (GET/POST)  
+- **.env Dosyası**: `/var/www/html/api/.env`
+- **Avantajlar**: 
+  - ✅ Node.js/npm kurulum gerektirmez
+  - ✅ PHP genelde Ubuntu'da hazır
+  - ✅ Basit Nginx entegrasyonu
+  - ✅ .env dosya yönetimi
 
 Detaylı kurulum için [README-DEPLOY.md](README-DEPLOY.md) dosyasına bakın.
 

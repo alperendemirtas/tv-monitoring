@@ -34,10 +34,10 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sunucudan ayarları çek - .env dosyasından
+  // Sunucudan ayarları çek - PHP API'den
   const fetchConfigFromServer = async () => {
     try {
-      const response = await fetch(`/api/config`)
+      const response = await fetch(`/api/config.php`)
       const data = await response.json()
       
       if (data.success && data.config) {
@@ -60,10 +60,10 @@ function App() {
     }
   }
 
-  // Ayarları sunucuya kaydet - .env dosyasına
+  // Ayarları sunucuya kaydet - PHP API'ye
   const saveConfigToServer = async (opmanager, sensibo) => {
     try {
-      const response = await fetch(`/api/config`, {
+      const response = await fetch(`/api/config.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

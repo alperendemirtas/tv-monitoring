@@ -11,6 +11,28 @@ function App() {
   const [configLoading, setConfigLoading] = useState(true)
   const [isConfigured, setIsConfigured] = useState(false)
   const [serverIp, setServerIp] = useState('')
+  const [isTvMode, setIsTvMode] = useState(false)
+
+  // TV mode tespiti - Büyük ekranlar için
+  useEffect(() => {
+    const screenWidth = window.screen.width
+    const screenHeight = window.screen.height
+    const pixelDensity = window.devicePixelRatio || 1
+    
+    // 50+ inç TV tespiti (genelde 1920x1080+ ve düşük pixel density)
+    const isBigScreen = screenWidth >= 1920 && screenHeight >= 1080 && pixelDensity <= 1.5
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isTvBrowser = userAgent.includes('smart') || 
+                        userAgent.includes('tizen') || 
+                        userAgent.includes('webos') || 
+                        userAgent.includes('opera tv')
+    
+    if (isBigScreen || isTvBrowser) {
+      setIsTvMode(true)
+      document.body.classList.add('tv-mode')
+      console.log('TV Mode activated - Screen:', screenWidth + 'x' + screenHeight)
+    }
+  }, [])
 
   // Server IP'sini tespit et
   useEffect(() => {
@@ -297,7 +319,14 @@ function App() {
   // Artık her zaman ana dashboard gösterilecek
 
   return (
-    <div className="app">
+    <div className={`app ${isTvMode ? 'tv-mode' : ''}`}>
+      {/* TV Mode Indicator */}
+      {isTvMode && (
+        <div className="tv-mode-indicator">
+          📺 TV Mode - {window.screen.width}x{window.screen.height}
+        </div>
+      )}
+      
       {/* Ana Dashboard Konteyneri */}
       <div className="dashboard-container">
         {/* Sol Panel - OpManager (%80) */}

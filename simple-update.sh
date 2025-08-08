@@ -2,8 +2,12 @@
 
 echo "🔄 Basit güncelleme başlıyor..."
 
-# Proje dizinine git
-cd /var/www/tv-monitoring
+# Proje dizinine# API sunucusunu durdur - Artık gerek yok
+echo "🛑 API sunucusu durduruluyor..."
+sudo systemctl stop tv-monitoring-api
+sudo systemctl disable tv-monitoring-api
+
+echo "🎉 Sistem artık localStorage tabanlı çalışıyor - Tüm sekmelerde senkronize!"d /var/www/tv-monitoring
 
 # Git güncellemesi
 echo "📥 Git'den son değişiklikleri çekiyor..."

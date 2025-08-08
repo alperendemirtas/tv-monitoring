@@ -2,12 +2,12 @@
 
 echo "🔄 Basit güncelleme başlıyor..."
 
-# Proje dizinine# API sunucusunu durdur - Artık gerek yok
-echo "🛑 API sunucusu durduruluyor..."
-sudo systemctl stop tv-monitoring-api
-sudo systemctl disable tv-monitoring-api
+# Proje dizinine# API sunucusunu başlat - .env sistemi
+echo "� API sunucusu başlatılıyor (.env sistemi)..."
+sudo systemctl start tv-monitoring-api
+sudo systemctl enable tv-monitoring-api
 
-echo "🎉 Sistem artık localStorage tabanlı çalışıyor - Tüm sekmelerde senkronize!"d /var/www/tv-monitoring
+echo "🎉 Sistem artık .env dosyası tabanlı çalışıyor - Tüm cihazlarda senkronize!"d /var/www/tv-monitoring
 
 # Git güncellemesi
 echo "📥 Git'den son değişiklikleri çekiyor..."

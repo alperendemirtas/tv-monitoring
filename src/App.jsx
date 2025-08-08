@@ -34,48 +34,70 @@ function App() {
     return 'humidity-high'
   }
 
-  // localStorage senkronizasyonu - Tüm sekmeler arası
-  const syncAcrossAllTabs = (key, value) => {
-    localStorage.setItem(key, value)
-    // Storage event tetikle - diğer sekmelere bildirim
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: key,
-      newValue: value,
-      url: window.location.href
-    }))
-  }
-
-  // Diğer sekmelerden gelen değişiklikleri dinle
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'opmanagerUrl' && e.newValue) {
-        setOpmanagerUrl(e.newValue)
-        setIsConfigured(true)
-      }
-      if (e.key === 'sensiboApiKey' && e.newValue) {
-        setSensiboApiKey(e.newValue)
-        setIsConfigured(true)
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  // Ayarları kaydet - localStorage + cross-tab sync
-  const saveConfigToLocal = async (opmanager, sensibo) => {
+  // Sunucudan ayarları çek - .env dosyasından
+  const fetchConfigFromServer = async () => {
     try {
-      // Tüm sekmelerde senkronize et
-      syncAcrossAllTabs('opmanagerUrl', opmanager)
-      syncAcrossAllTabs('sensiboApiKey', sensibo)
-      return true
-    } catch (err) {
-      console.error('LocalStorage\'a kaydedilemedi:', err)
+      const response = await fetch(`/api/config`)
+      const data = await response.json()
+      
+      if (data.success && data.config) {
+        const { opmanagerUrl: serverOpmanager, sensiboApiKey: serverSensibo } = data.config
+        
+        if (serverOpmanager) setOpmanagerUrl(serverOpmanager)
+        if (serverSensibo) setSensiboApiKey(serverSensibo)
+        return true
+      }
       return false
+    } catch (err) {
+      console.error('Sunucudan config alınamadı:', err)
+      // Fallback olarak localStorage'u dene
+      const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+      const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
+      
+      if (savedOpmanagerUrl) setOpmanagerUrl(savedOpmanagerUrl)
+      if (savedSensiboApiKey) setSensiboApiKey(savedSensiboApiKey)
+      return !!(savedOpmanagerUrl || savedSensiboApiKey)
     }
   }
 
-  // Sayfa yüklendiğinde ayarları kontrol et - Sadece localStorage
+  // Ayarları sunucuya kaydet - .env dosyasına
+  const saveConfigToServer = async (opmanager, sensibo) => {
+    try {
+      const response = await fetch(`/api/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          opmanagerUrl: opmanager,
+          sensiboApiKey: sensibo
+        })
+      })
+
+      const data = await response.json()
+      
+      // Başarı durumunda localStorage'a da kaydet (fallback için)
+      if (data.success) {
+        localStorage.setItem('opmanagerUrl', opmanager)
+        localStorage.setItem('sensiboApiKey', sensibo)
+      }
+      
+      return data.success
+    } catch (err) {
+      console.error('Sunucuya config kaydedilemedi:', err)
+      // Fallback olarak localStorage'a kaydet
+      try {
+        localStorage.setItem('opmanagerUrl', opmanager)
+        localStorage.setItem('sensiboApiKey', sensibo)
+        return true
+      } catch (localErr) {
+        console.error('LocalStorage\'a kaydedilemedi:', localErr)
+        return false
+      }
+    }
+  }
+
+  // Sayfa yüklendiğinde ayarları kontrol et - .env tabanlı sistem
   useEffect(() => {
     const initializeConfig = async () => {
       // URL parametrelerini kontrol et
@@ -83,7 +105,7 @@ function App() {
       const urlOpmanager = urlParams.get('opmanager')
       const urlSensibo = urlParams.get('sensibo')
       
-      // URL parametresi varsa direkt kullan ve kaydet
+      // URL parametresi varsa direkt kullan ve sunucuya kaydet
       if (urlOpmanager || urlSensibo) {
         const opmanagerValue = urlOpmanager ? decodeURIComponent(urlOpmanager) : ''
         const sensiboValue = urlSensibo || ''
@@ -91,20 +113,28 @@ function App() {
         if (opmanagerValue) setOpmanagerUrl(opmanagerValue)
         if (sensiboValue) setSensiboApiKey(sensiboValue)
         
-        // Tüm sekmelerde senkronize et
-        await saveConfigToLocal(opmanagerValue, sensiboValue)
+        // .env dosyasına kaydet
+        await saveConfigToServer(opmanagerValue, sensiboValue)
         setIsConfigured(true)
         setConfigLoading(false)
         return
       }
 
-      // localStorage'dan ayarları yükle
-      const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
-      const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
+      // Önce sunucudan (.env dosyasından) ayarları yükle
+      const serverConfigLoaded = await fetchConfigFromServer()
       
-      setOpmanagerUrl(savedOpmanagerUrl)
-      setSensiboApiKey(savedSensiboApiKey)
-      setIsConfigured(!!(savedOpmanagerUrl || savedSensiboApiKey))
+      if (serverConfigLoaded) {
+        setIsConfigured(true)
+      } else {
+        // Sunucuda da yoksa localStorage'dan yükle
+        const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+        const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
+        
+        setOpmanagerUrl(savedOpmanagerUrl)
+        setSensiboApiKey(savedSensiboApiKey)
+        setIsConfigured(!!(savedOpmanagerUrl || savedSensiboApiKey))
+      }
+      
       setConfigLoading(false)
     }
 
@@ -227,10 +257,10 @@ function App() {
     }
   }, [sensiboApiKey])
 
-  // Ayarları kaydet - Cross-tab sync sistemi
+  // Ayarları kaydet - .env dosyasına kaydet
   const handleSaveSettings = async () => {
-    // localStorage + tüm sekmelere senkronize et
-    const saved = await saveConfigToLocal(opmanagerUrl, sensiboApiKey)
+    // .env dosyasına kaydet
+    const saved = await saveConfigToServer(opmanagerUrl, sensiboApiKey)
     
     if (saved) {
       setIsConfigured(true)
@@ -239,7 +269,7 @@ function App() {
         fetchSensiboData()
       }
       // Success feedback
-      alert('✅ Ayarlar başarıyla kaydedildi ve tüm sekmelerde senkronize edildi!')
+      alert('✅ Ayarlar .env dosyasına kaydedildi ve tüm cihazlarda senkronize olacak!')
     } else {
       alert('❌ Ayarlar kaydedilemedi.')
     }
@@ -407,7 +437,7 @@ function App() {
                     <small>http://{serverIp}/?opmanager=https%3A//example.com&sensibo=abc123</small>
                   </div>
                   <div className="tv-note">
-                    💡 <strong>Not:</strong> Ayarlar tüm sekmelerde otomatik senkronize olur
+                    💡 <strong>Not:</strong> Ayarlar sunucudaki .env dosyasında saklanır, tüm cihazlarda görünür
                   </div>
                 </div>
               </div>

@@ -386,6 +386,7 @@ function App() {
                           {device.temperature ? 
                             `${device.temperature.toFixed(1)}°C` : 
                             'N/A'}
+                          {device.temperature && <div className="unit-label">Derece</div>}
                         </div>
                       </div>
                       <div className="data-row humidity-row">
@@ -397,6 +398,7 @@ function App() {
                           {device.humidity ? 
                             `${device.humidity.toFixed(0)}%` : 
                             'N/A'}
+                          {device.humidity && <div className="unit-label">Yüzde</div>}
                         </div>
                       </div>
                       {device.humidity && (
@@ -455,26 +457,6 @@ function App() {
                 <button onClick={handleSaveSettings} className="save-button">
                   Kaydet
                 </button>
-                
-                {/* TV için kullanım talimatı */}
-                <div className="tv-instructions">
-                  <div className="tv-tip">
-                    📺 <strong>TV İçin Kolay Kurulum:</strong>
-                  </div>
-                  <div className="tv-tip-text">
-                    Bilgisayardan şu formatta link hazırla:<br/>
-                    <code>
-                      http://{serverIp}/?opmanager=OPMANAGER_URL&sensibo=API_KEY
-                    </code>
-                  </div>
-                  <div className="tv-example">
-                    <strong>Örnek:</strong><br/>
-                    <small>http://{serverIp}/?opmanager=https%3A//example.com&sensibo=abc123</small>
-                  </div>
-                  <div className="tv-note">
-                    💡 <strong>Not:</strong> Ayarlar sunucudaki .env dosyasında saklanır, tüm cihazlarda görünür
-                  </div>
-                </div>
               </div>
             </div>
           </div>

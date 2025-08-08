@@ -1,17 +1,30 @@
 @echo off
-echo 🚀 Local development sunucusu başlatılıyor...
+echo 🚀 TV Monitoring Dashboard başlatılıyor...
 
-REM React dev server'ı başlat (arka planda)
-echo 📦 React dev server başlatılıyor...
-start "React Dev" cmd /k "npm run dev"
+REM Node.js ve npm kontrolü
+echo 📦 Node.js kontrol ediliyor...
+node --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ Node.js bulunamadı! Lütfen Node.js kurun.
+    echo 📥 https://nodejs.org adresinden indirebilirsiniz.
+    pause
+    exit /b 1
+)
 
-REM PHP API server'ı başlat (arka planda)  
-echo 🐘 PHP API server başlatılıyor...
-start "PHP API" cmd /k "cd api && php -S localhost:3001 config.php"
+REM Dependencies kurulum kontrolü
+if not exist "node_modules" (
+    echo � Dependencies kuruluyor...
+    npm install
+)
 
-echo ✅ Sunucular başlatıldı!
-echo 🌐 React App: http://localhost:5173
-echo 🔌 PHP API: http://localhost:3001
-echo 💡 Her iki pencereyi kapatmak için CTRL+C kullanın
+REM React dev server'ı başlat
+echo 🌐 Dashboard başlatılıyor...
+echo 📍 Yerel adres: http://localhost:5173
+echo 🌍 Ağ adresi: http://[IP]:5173
+echo.
+echo 💡 Durdurmak için CTRL+C kullanın
+echo.
+
+npm run dev
 
 pause

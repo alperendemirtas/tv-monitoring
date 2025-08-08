@@ -34,10 +34,16 @@ function App() {
     return 'humidity-high'
   }
 
+  // API endpoint'ini belirle (local vs production)
+  const getApiEndpoint = () => {
+    const isDev = window.location.hostname === 'localhost'
+    return isDev ? 'http://localhost:3001' : '/api/config.php'
+  }
+
   // Sunucudan ayarları çek - PHP API'den
   const fetchConfigFromServer = async () => {
     try {
-      const response = await fetch(`/api/config.php`)
+      const response = await fetch(getApiEndpoint())
       const data = await response.json()
       
       if (data.success && data.config) {
@@ -63,7 +69,7 @@ function App() {
   // Ayarları sunucuya kaydet - PHP API'ye
   const saveConfigToServer = async (opmanager, sensibo) => {
     try {
-      const response = await fetch(`/api/config.php`, {
+            const response = await fetch(getApiEndpoint(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

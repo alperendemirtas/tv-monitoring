@@ -21,37 +21,64 @@ npm run build
 echo "📁 Build dosyaları Nginx dizinine kopyalanıyor..."
 sudo cp -r dist/* /var/www/html/
 
-# PHP API klasörünü kopyala
-echo "📁 PHP API dosyaları kopyalanıyor..."
-sudo mkdir -p /var/www/html/api
-sudo cp api/config.php /var/www/html/api/
+# PHP API klasörünü kopyala ve kontrol et
+echo "📁 PHP API dosyaları kontrol ediliyor..."
+if [ -f "api/config.php" ]; then
+    echo "✅ config.php kaynak dosyası mevcut"
+    sudo mkdir -p /var/www/html/api
+    sudo cp api/config.php /var/www/html/api/
+    echo "📋 config.php kopyalandı"
+    
+    # Dosyanın başarıyla kopyalanıp kopyalanmadığını kontrol et
+    if [ -f "/var/www/html/api/config.php" ]; then
+        echo "✅ config.php hedef konumda mevcut"
+        echo "📏 Dosya boyutu: $(wc -c < /var/www/html/api/config.php) byte"
+    else
+        echo "❌ config.php kopyalanamadı!"
+        exit 1
+    fi
+else
+    echo "❌ api/config.php kaynak dosyası bulunamadı!"
+    ls -la api/
+    exit 1
+fi
 
-# API klasörüne yazma izni ver
+# API klasörüne yazma izni ver ve kontrol et
 echo "🔒 API klasörü izinleri ayarlanıyor..."
 sudo chown -R www-data:www-data /var/www/html/api
 sudo chmod 755 /var/www/html/api
 sudo chmod 644 /var/www/html/api/config.php
 
-# Nginx config'i güncelle
+# İzinleri kontrol et
+echo "🔍 İzin kontrolü:"
+ls -la /var/www/html/api/
+echo "📂 API klasörü içeriği:"
+sudo ls -la /var/www/html/api/
+
 echo "🔧 Nginx config güncelleniyor (PHP destekli)..."
-sudo tee /etc/nginx/sites-available/tv-monitoring > /dev/null << 'EOF'
+
+# PHP version tespit et
+PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+echo "🐘 PHP Versiyonu: $PHP_VERSION"
+
+sudo tee /etc/nginx/sites-available/tv-monitoring > /dev/null << EOF
 server {
     listen 80;
     server_name 10.10.11.164;
+    root /var/www/html;
+    index index.html;
     
     # Ana React uygulaması
     location / {
-        root /var/www/html;
-        index index.html;
-        try_files $uri $uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
     
     # PHP API endpoint
     location ~ ^/api/config\.php$ {
-        root /var/www/html;
-        fastcgi_pass unix:/var/run/php/php-fpm.sock;
+        try_files \$uri =404;
+        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;
         fastcgi_index config.php;
-        fastcgi_param SCRIPT_FILENAME /var/www/html/api/config.php;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
     
@@ -59,26 +86,63 @@ server {
     location /api/sensibo/ {
         proxy_pass https://home.sensibo.com/api/v2/;
         proxy_set_header Host home.sensibo.com;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_ssl_verify off;
     }
 }
 EOF
 
-# PHP-FPM kurulu mu kontrol et
+# PHP-FPM kurulu mu kontrol et ve kurulum detayları
 echo "🐘 PHP kurulumu kontrol ediliyor..."
 if ! command -v php &> /dev/null; then
     echo "📦 PHP kuruluyor..."
     sudo apt update
-    sudo apt install -y php php-fpm
+    sudo apt install -y php php-fpm php-json
+else
+    echo "✅ PHP zaten kurulu: $(php --version | head -n1)"
 fi
 
-# Nginx yeniden başlat
+# PHP-FPM servisi kontrolü
+echo "🔄 PHP-FPM servis durumu:"
+sudo systemctl status php*-fpm --no-pager -l
+echo ""
+
+# PHP socket dosyasını bul
+echo "🔌 PHP-FPM socket konumu:"
+PHP_SOCKET=$(find /var/run/php* -name "*fpm.sock" 2>/dev/null | head -n1)
+if [ -n "$PHP_SOCKET" ]; then
+    echo "✅ PHP-FPM socket: $PHP_SOCKET"
+    ls -la "$PHP_SOCKET"
+else
+    echo "❌ PHP-FPM socket bulunamadı!"
+    echo "🔍 /var/run/php* klasör içeriği:"
+    sudo ls -la /var/run/php* 2>/dev/null || echo "PHP run klasörü yok"
+fi
+
+# Nginx yeniden başlat ve test et
 echo "🔄 Nginx yeniden başlatılıyor..."
+
+# Site'i aktifleştir
+sudo ln -sf /etc/nginx/sites-available/tv-monitoring /etc/nginx/sites-enabled/
+echo "🔗 Site aktifleştirildi"
+
 sudo systemctl restart nginx
 sudo systemctl restart php*-fpm
+
+# Nginx durumu
+echo "📊 Nginx servis durumu:"
+sudo systemctl status nginx --no-pager -l
+
+# Nginx config test
+echo "🧪 Nginx config test:"
+sudo nginx -t
+
+# API endpoint test
+echo "🧪 API endpoint test:"
+echo "GET http://localhost/api/config.php"
+curl -s http://localhost/api/config.php || echo "❌ API endpoint erişilemez"
 
 # Eski Node.js API servisini durdur (varsa)
 echo "🛑 Eski Node.js API servisi durduruluyor..."

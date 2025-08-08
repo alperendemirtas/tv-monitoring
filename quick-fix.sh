@@ -256,9 +256,22 @@ sudo ln -s /etc/nginx/sites-available/tv-monitoring /etc/nginx/sites-enabled/
 # Set correct permissions
 echo "🔧 Setting correct permissions..."
 if [ -d "$PROJECT_DIR/dist" ]; then
+    # First give nginx user access to parent directories
+    sudo chmod +x "$HOME_DIR"
+    sudo chmod +x "$PROJECT_DIR"
+    
+    # Then set correct ownership and permissions for dist folder
     sudo chown -R www-data:www-data "$PROJECT_DIR/dist"
     sudo chmod -R 755 "$PROJECT_DIR/dist"
+    
+    # Also ensure nginx can traverse the path
+    sudo setfacl -R -m u:www-data:rx "$HOME_DIR"
+    sudo setfacl -R -m u:www-data:rx "$PROJECT_DIR"
+    
     echo "✅ Permissions set successfully"
+    echo "📁 Directory permissions:"
+    ls -la "$HOME_DIR" | grep $(basename "$PROJECT_DIR")
+    ls -la "$PROJECT_DIR" | grep dist
 else
     echo "❌ Cannot set permissions: dist folder not found at $PROJECT_DIR/dist!"
     echo "Build must have failed. Exiting..."

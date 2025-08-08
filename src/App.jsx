@@ -34,10 +34,10 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sunucudan ayarları çek - Tüm cihazlar için merkezi sistem
+  // Sunucudan ayarları çek - Nginx proxy üzerinden
   const fetchConfigFromServer = async () => {
     try {
-      const response = await fetch(`http://${serverIp}:3001/api/config`)
+      const response = await fetch(`/api/config`)
       const data = await response.json()
       
       if (data.success && data.config) {
@@ -60,10 +60,10 @@ function App() {
     }
   }
 
-  // Ayarları sunucuya kaydet - Tüm cihazlar için
+  // Ayarları sunucuya kaydet - Nginx proxy üzerinden
   const saveConfigToServer = async (opmanager, sensibo) => {
     try {
-      const response = await fetch(`http://${serverIp}:3001/api/config`, {
+      const response = await fetch(`/api/config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

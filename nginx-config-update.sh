@@ -1,28 +1,8 @@
 #!/bin/bash
 
-echo "🔄 Basit güncelleme başlıyor..."
+echo "🔧 Nginx yapılandırması güncelleniyor..."
 
-# Proje dizinine git
-cd /var/www/tv-monitoring
-
-# Git güncellemesi
-echo "📥 Git'den son değişiklikleri çekiyor..."
-git pull origin main
-
-# Node modüllerini güncelle
-echo "📦 Bağımlılıkları güncelleniyor..."
-npm install
-
-# Projeyi build et
-echo "🏗️ Proje build ediliyor..."
-npm run build
-
-# Build klasörünü kopyala
-echo "📁 Build dosyaları Nginx dizinine kopyalanıyor..."
-sudo cp -r dist/* /var/www/html/
-
-# Nginx config'i güncelle
-echo "🔧 Nginx config güncelleniyor..."
+# Nginx config dosyasını güncelle
 sudo tee /etc/nginx/sites-available/tv-monitoring > /dev/null << 'EOF'
 server {
     listen 80;
@@ -60,16 +40,17 @@ server {
 }
 EOF
 
-# Nginx restart
-echo "🔄 Nginx yeniden başlatılıyor..."
-sudo systemctl restart nginx
+echo "✅ Nginx config güncellendi"
 
-echo "✅ Güncelleme tamamlandı!"
-echo "🌐 Site adresi: http://10.10.11.164"
+# Nginx'i test et ve yeniden başlat
+echo "🧪 Nginx yapılandırması test ediliyor..."
+sudo nginx -t
 
-# API sunucusunu başlat
-echo "� API sunucusu başlatılıyor..."
-sudo systemctl start tv-monitoring-api
-sudo systemctl enable tv-monitoring-api
-
-echo "🎉 Sistem artık sunucu tabanlı çalışıyor - Tüm cihazlarda senkronize!"
+if [ $? -eq 0 ]; then
+    echo "✅ Nginx yapılandırması geçerli"
+    echo "🔄 Nginx yeniden başlatılıyor..."
+    sudo systemctl restart nginx
+    echo "🎉 Nginx güncellendi! Artık /api/config endpoint'i çalışacak"
+else
+    echo "❌ Nginx yapılandırmasında hata var!"
+fi

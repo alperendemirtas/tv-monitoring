@@ -15,7 +15,7 @@ function App() {
   // Server IP'sini tespit et
   useEffect(() => {
     const hostname = window.location.hostname
-    setServerIp(hostname === 'localhost' ? '192.168.1.100' : hostname)
+    setServerIp(hostname === 'localhost' ? '10.10.11.164' : hostname)
   }, [])
 
   // Sıcaklık kategorisini belirle
@@ -489,7 +489,7 @@ function App() {
                   </div>
                   <div className="tv-example">
                     <strong>Örnek:</strong><br/>
-                    <small>http://192.168.1.100/?opmanager=https%3A//example.com&sensibo=abc123</small>
+                    <small>http://10.10.11.164/?opmanager=https%3A//example.com&sensibo=abc123</small>
                   </div>
                 </div>
               </div>

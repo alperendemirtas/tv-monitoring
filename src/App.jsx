@@ -8,6 +8,15 @@ function App() {
   const [sensiboData, setSensiboData] = useState([]) // Array olarak değiştirdik
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [configLoading, setConfigLoading] = useState(true)
+  const [isConfigured, setIsConfigured] = useState(false)
+  const [serverIp, setServerIp] = useState('')
+
+  // Server IP'sini tespit et
+  useEffect(() => {
+    const hostname = window.location.hostname
+    setServerIp(hostname === 'localhost' ? '192.168.1.100' : hostname)
+  }, [])
 
   // Sıcaklık kategorisini belirle
   const getTempCategory = (temperature) => {
@@ -25,32 +34,106 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sayfa yüklendiğinde localStorage'dan ve URL parametrelerinden verileri oku
+  // Sunucudan ayarları çek (TV için)
+  const fetchConfigFromServer = async () => {
+    try {
+      const response = await fetch(`http://${serverIp}:3001/api/config`)
+      const data = await response.json()
+      
+      if (data.success && data.config) {
+        const { opmanagerUrl: serverOpmanager, sensiboApiKey: serverSensibo } = data.config
+        
+        if (serverOpmanager || serverSensibo) {
+          if (serverOpmanager) setOpmanagerUrl(serverOpmanager)
+          if (serverSensibo) setSensiboApiKey(serverSensibo)
+          setIsConfigured(true)
+          return true
+        }
+      }
+      return false
+    } catch (err) {
+      console.error('Sunucudan config alınamadı:', err)
+      return false
+    } finally {
+      setConfigLoading(false)
+    }
+  }
+
+  // Ayarları sunucuya kaydet (Kullanıcının bilgisayarı için)
+  const saveConfigToServer = async (opmanager, sensibo) => {
+    try {
+      const response = await fetch(`http://${serverIp}:3001/api/config`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          opmanagerUrl: opmanager,
+          sensiboApiKey: sensibo
+        })
+      })
+
+      const data = await response.json()
+      return data.success
+    } catch (err) {
+      console.error('Sunucuya config kaydedilemedi:', err)
+      return false
+    }
+  }
+
+  // Sayfa yüklendiğinde önce sunucudan, sonra localStorage'dan verileri oku
   useEffect(() => {
-    // URL parametrelerini kontrol et
-    const urlParams = new URLSearchParams(window.location.search)
-    const urlOpmanager = urlParams.get('opmanager')
-    const urlSensibo = urlParams.get('sensibo')
-    
-    // Önce localStorage'dan oku
-    const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
-    const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
-    
-    // URL parametresi varsa onu kullan ve kaydet
-    if (urlOpmanager) {
-      setOpmanagerUrl(decodeURIComponent(urlOpmanager))
-      localStorage.setItem('opmanagerUrl', decodeURIComponent(urlOpmanager))
-    } else {
-      setOpmanagerUrl(savedOpmanagerUrl)
+    const initializeConfig = async () => {
+      // URL parametrelerini kontrol et
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlOpmanager = urlParams.get('opmanager')
+      const urlSensibo = urlParams.get('sensibo')
+      
+      // URL parametresi varsa direkt kullan
+      if (urlOpmanager || urlSensibo) {
+        if (urlOpmanager) setOpmanagerUrl(decodeURIComponent(urlOpmanager))
+        if (urlSensibo) setSensiboApiKey(urlSensibo)
+        setIsConfigured(true)
+        setConfigLoading(false)
+        return
+      }
+
+      // Sunucudan ayarları çekmeye çalış
+      const serverConfigLoaded = await fetchConfigFromServer()
+      
+      if (!serverConfigLoaded) {
+        // Sunucuda ayar yoksa localStorage'dan oku
+        const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+        const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
+        
+        setOpmanagerUrl(savedOpmanagerUrl)
+        setSensiboApiKey(savedSensiboApiKey)
+        setIsConfigured(!!(savedOpmanagerUrl || savedSensiboApiKey))
+      }
     }
+
+    initializeConfig()
+  }, [serverIp])
+
+  // Ayarları kontrol etmek için polling (TV için)
+  useEffect(() => {
+    let configInterval
     
-    if (urlSensibo) {
-      setSensiboApiKey(urlSensibo)
-      localStorage.setItem('sensiboApiKey', urlSensibo)
-    } else {
-      setSensiboApiKey(savedSensiboApiKey)
+    if (!isConfigured) {
+      configInterval = setInterval(async () => {
+        const configLoaded = await fetchConfigFromServer()
+        if (configLoaded) {
+          clearInterval(configInterval)
+        }
+      }, 5000) // 5 saniyede bir kontrol et
     }
-  }, [])
+
+    return () => {
+      if (configInterval) {
+        clearInterval(configInterval)
+      }
+    }
+  }, [isConfigured, serverIp])
 
   // Sensibo verilerini çek
   const fetchSensiboData = async () => {
@@ -167,14 +250,99 @@ function App() {
   }, [sensiboApiKey])
 
   // Ayarları kaydet
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
+    // Önce localStorage'a kaydet
     localStorage.setItem('opmanagerUrl', opmanagerUrl)
     localStorage.setItem('sensiboApiKey', sensiboApiKey)
     
-    // Sensibo verilerini yeniden çek
-    if (sensiboApiKey) {
-      fetchSensiboData()
+    // Sonra sunucuya kaydet
+    const saved = await saveConfigToServer(opmanagerUrl, sensiboApiKey)
+    
+    if (saved) {
+      setIsConfigured(true)
+      // Sensibo verilerini yeniden çek
+      if (sensiboApiKey) {
+        fetchSensiboData()
+      }
+      // Success feedback
+      alert('✅ Ayarlar başarıyla kaydedildi ve TV ekranına gönderildi!')
+    } else {
+      // Hata durumunda sadece local olarak çalıştır
+      if (sensiboApiKey) {
+        fetchSensiboData()
+      }
+      alert('⚠️ Ayarlar yerel olarak kaydedildi, ancak sunucuya gönderilemedi.')
     }
+  }
+
+  // Yapılandırma bekleme ekranı
+  if (configLoading) {
+    return (
+      <div className="app">
+        <div className="config-loading">
+          <div className="loading-spinner"></div>
+          <h2>Ayarlar yükleniyor...</h2>
+          <p>Lütfen bekleyin</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Yapılandırma bekleme ekranı (TV için)
+  if (!isConfigured && !configLoading) {
+    return (
+      <div className="app">
+        <div className="config-waiting">
+          <div className="waiting-content">
+            <div className="tv-icon">📺</div>
+            <h1>TV Dashboard Yapılandırma Bekleniyor</h1>
+            
+            <div className="instructions">
+              <h3>Bu ekranı yapılandırmak için:</h3>
+              <ol>
+                <li>Aynı ağdaki bir bilgisayardan tarayıcınızı açın</li>
+                <li>Aşağıdaki adrese gidin:</li>
+                <div className="config-url">
+                  http://{serverIp}:3000
+                </div>
+                <li>Ayarları doldurup "Kaydet" butonuna tıklayın</li>
+                <li>Bu ekran otomatik olarak güncellenecektir</li>
+              </ol>
+            </div>
+            
+            <div className="polling-indicator">
+              <div className="pulse"></div>
+              <span>Ayarlar kontrol ediliyor... (5 saniyede bir)</span>
+            </div>
+            
+            <div className="manual-config">
+              <details>
+                <summary>Manuel Ayar</summary>
+                <div className="manual-form">
+                  <input
+                    type="text"
+                    placeholder="OpManager URL"
+                    value={opmanagerUrl}
+                    onChange={(e) => setOpmanagerUrl(e.target.value)}
+                    className="manual-input"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Sensibo API Key"
+                    value={sensiboApiKey}
+                    onChange={(e) => setSensiboApiKey(e.target.value)}
+                    className="manual-input"
+                  />
+                  <button onClick={handleSaveSettings} className="manual-save-btn">
+                    Manuel Kaydet
+                  </button>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

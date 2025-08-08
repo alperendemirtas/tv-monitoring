@@ -47,10 +47,40 @@ if ! command -v node &> /dev/null; then
 fi
 
 # Change to project directory and build as www-data
-echo "🔨 Building project..."
+echo "🔨 Building React project..."
 cd "$PROJECT_DIR"
 sudo -u www-data npm install
 sudo -u www-data npm run build
+
+# Install API dependencies and start API server
+echo "🔧 Setting up API server..."
+cd "$PROJECT_DIR/api"
+sudo -u www-data npm install
+
+# Create systemd service for API
+echo "⚙️ Creating API systemd service..."
+sudo tee /etc/systemd/system/tv-monitoring-api.service > /dev/null << EOF
+[Unit]
+Description=TV Monitoring API Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=$PROJECT_DIR/api
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start API service
+sudo systemctl daemon-reload
+sudo systemctl enable tv-monitoring-api
+sudo systemctl start tv-monitoring-api
 
 # Check if build was successful
 if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then

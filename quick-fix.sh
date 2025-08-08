@@ -14,7 +14,6 @@ echo "📁 Project will be created at: $PROJECT_DIR (moved from home for nginx c
 
 # Create /var/www if it doesn't exist
 sudo mkdir -p /var/www
-cd /var/www
 
 # Stop nginx
 sudo systemctl stop nginx
@@ -27,7 +26,10 @@ sudo rm -f /etc/nginx/sites-available/tv-monitoring
 
 # Fresh clone
 echo "📥 Fresh clone from GitHub..."
-git clone https://github.com/alperendemirtas/tv-monitoring.git "$PROJECT_DIR"
+sudo git clone https://github.com/alperendemirtas/tv-monitoring.git "$PROJECT_DIR"
+
+# Change ownership to current user for npm operations
+sudo chown -R "$USER_NAME:$USER_NAME" "$PROJECT_DIR"
 cd "$PROJECT_DIR"
 
 # Install and build

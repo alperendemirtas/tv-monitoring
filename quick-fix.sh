@@ -44,12 +44,38 @@ server {
     root /home/ubuntu/tv-monitoring/dist;
     index index.html index.htm;
     
-    # Main location block
+    # Handle POST requests that should not be redirected
+    location ~* \.(php|jsp|asp|cgi)$ {
+        return 404;
+    }
+    
+    # Block suspicious POST requests
+    location ~* /cpca-capt {
+        return 404;
+    }
+    
+    # Main location block - only for GET requests
     location / {
-        try_files $uri $uri/ /index.html;
+        # Only allow GET and HEAD methods for static content
+        if ($request_method !~ ^(GET|HEAD)$) {
+            return 405;
+        }
+        
+        # Try files first, then directories, finally fallback to index.html for React routing
+        try_files $uri $uri/ @fallback;
+        
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Pragma "no-cache";
         add_header Expires "0";
+    }
+    
+    # Fallback location for React routing
+    location @fallback {
+        # Double check this is a GET request
+        if ($request_method !~ ^(GET|HEAD)$) {
+            return 405;
+        }
+        try_files /index.html =404;
     }
     
     # Sensibo API proxy

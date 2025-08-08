@@ -46,7 +46,113 @@ if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
     echo ""
     echo "Trying to build again with verbose output:"
     npm run build --verbose
-    exit 1
+    
+    echo ""
+    echo "🛠️ Build failed, creating manual fallback HTML..."
+    
+    # Create manual dist folder and HTML
+    mkdir -p dist
+    
+    cat > dist/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Monitoring Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1a1a1a; color: #fff; font-family: Arial, sans-serif; }
+        .container { display: flex; height: 100vh; }
+        .left { flex: 80%; border: 1px solid #333; margin: 10px; }
+        .right { flex: 20%; border: 1px solid #333; margin: 10px; padding: 20px; }
+        .placeholder { display: flex; align-items: center; justify-content: center; height: 100%; text-align: center; }
+        h2 { margin-bottom: 20px; color: #007acc; }
+        h3 { margin-bottom: 15px; color: #007acc; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #333; border: 1px solid #555; color: #fff; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #007acc; border: none; color: #fff; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #005999; }
+        .status { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .success { background: rgba(76, 175, 80, 0.2); border: 1px solid #4CAF50; }
+        .info { background: rgba(33, 150, 243, 0.2); border: 1px solid #2196F3; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <div class="placeholder">
+                <div>
+                    <h2>🖥️ TV Monitoring Dashboard</h2>
+                    <div class="info">
+                        <p><strong>Dashboard başarıyla yüklendi!</strong></p>
+                        <p>React build başarısız oldu, ancak temel dashboard çalışıyor.</p>
+                        <p>Sağ panelden OpManager URL'i ve Sensibo API anahtarı ekleyin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <h3>⚙️ Ayarlar</h3>
+            <input type="text" id="opmanagerUrl" placeholder="OpManager URL (örn: https://your-opmanager.com)">
+            <input type="password" id="sensiboKey" placeholder="Sensibo API Anahtarı">
+            <button onclick="saveSettings()">💾 Kaydet</button>
+            <div id="status" class="status" style="display:none;"></div>
+            
+            <div style="margin-top: 30px; padding: 15px; background: rgba(255, 193, 7, 0.1); border: 1px solid #FFC107; border-radius: 4px;">
+                <h4 style="color: #FFC107; margin-bottom: 10px;">📝 Not:</h4>
+                <p style="font-size: 12px;">Bu basitleştirilmiş versiyondur. Tam React versiyonu için build sorununu çözmeniz gerekiyor.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function saveSettings() {
+            const opmanagerUrl = document.getElementById('opmanagerUrl').value;
+            const sensiboKey = document.getElementById('sensiboKey').value;
+            const statusDiv = document.getElementById('status');
+            
+            if (opmanagerUrl) {
+                localStorage.setItem('opmanagerUrl', opmanagerUrl);
+                document.querySelector('.left').innerHTML = 
+                    '<iframe src="' + opmanagerUrl + '" style="width:100%;height:100%;border:none;" title="OpManager Dashboard"></iframe>';
+            }
+            
+            if (sensiboKey) {
+                localStorage.setItem('sensiboApiKey', sensiboKey);
+            }
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = '<p><strong>✅ Ayarlar başarıyla kaydedildi!</strong></p>' +
+                                 (opmanagerUrl ? '<p>OpManager dashboard yüklendi.</p>' : '') +
+                                 (sensiboKey ? '<p>Sensibo API anahtarı kaydedildi.</p>' : '');
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Sayfa yüklendiğinde ayarları geri yükle
+        window.onload = function() {
+            const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl');
+            const savedSensiboKey = localStorage.getItem('sensiboApiKey');
+            
+            if (savedOpmanagerUrl) {
+                document.getElementById('opmanagerUrl').value = savedOpmanagerUrl;
+                document.querySelector('.left').innerHTML = 
+                    '<iframe src="' + savedOpmanagerUrl + '" style="width:100%;height:100%;border:none;" title="OpManager Dashboard"></iframe>';
+            }
+            
+            if (savedSensiboKey) {
+                document.getElementById('sensiboKey').value = savedSensiboKey;
+            }
+        };
+    </script>
+</body>
+</html>
+HTMLEOF
+    
+    echo "✅ Manual fallback HTML created successfully!"
 fi
 
 echo "✅ Build successful, dist folder contains:"

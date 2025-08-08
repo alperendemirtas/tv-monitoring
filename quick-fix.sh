@@ -1,16 +1,20 @@
 #!/bin/bash
 echo "🔧 TV Monitoring Dashboard - Quick Fix Script"
 
-# Get current user and home directory
+# Get current user and home directory - but use /var/www for nginx compatibility
 USER_NAME=$(whoami)
 HOME_DIR=$(eval echo ~$USER_NAME)
-PROJECT_DIR="$HOME_DIR/tv-monitoring"
+
+# Use /var/www instead of home directory to avoid permission issues
+PROJECT_DIR="/var/www/tv-monitoring"
 
 echo "👤 Current user: $USER_NAME"
 echo "🏠 Home directory: $HOME_DIR"
-echo "📁 Project will be created at: $PROJECT_DIR"
+echo "📁 Project will be created at: $PROJECT_DIR (moved from home for nginx compatibility)"
 
-cd "$HOME_DIR"
+# Create /var/www if it doesn't exist
+sudo mkdir -p /var/www
+cd /var/www
 
 # Stop nginx
 sudo systemctl stop nginx
@@ -256,21 +260,13 @@ sudo ln -s /etc/nginx/sites-available/tv-monitoring /etc/nginx/sites-enabled/
 # Set correct permissions
 echo "🔧 Setting correct permissions..."
 if [ -d "$PROJECT_DIR/dist" ]; then
-    # First give nginx user access to parent directories
-    sudo chmod +x "$HOME_DIR"
-    sudo chmod +x "$PROJECT_DIR"
-    
-    # Then set correct ownership and permissions for dist folder
-    sudo chown -R www-data:www-data "$PROJECT_DIR/dist"
-    sudo chmod -R 755 "$PROJECT_DIR/dist"
-    
-    # Also ensure nginx can traverse the path
-    sudo setfacl -R -m u:www-data:rx "$HOME_DIR"
-    sudo setfacl -R -m u:www-data:rx "$PROJECT_DIR"
+    # Since we're using /var/www, permissions are much simpler
+    sudo chown -R www-data:www-data "$PROJECT_DIR"
+    sudo chmod -R 755 "$PROJECT_DIR"
     
     echo "✅ Permissions set successfully"
     echo "📁 Directory permissions:"
-    ls -la "$HOME_DIR" | grep $(basename "$PROJECT_DIR")
+    ls -la /var/www/ | grep tv-monitoring
     ls -la "$PROJECT_DIR" | grep dist
 else
     echo "❌ Cannot set permissions: dist folder not found at $PROJECT_DIR/dist!"

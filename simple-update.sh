@@ -2,6 +2,21 @@
 
 echo "🔄 Basit güncelleme başlıyor..."
 
+# Proje dizinine git
+cd /# API sunucusunu başlat ve etkinleştir
+echo "🚀 API sunucusu başlatılıyor (.env sistemi)..."
+cd api
+npm install
+cd ..
+sudo systemctl start tv-monitoring-api
+sudo systemctl enable tv-monitoring-api
+
+echo "✅ Güncelleme tamamlandı!"
+echo "🌐 Site adresi: http://10.10.11.164"
+echo "🎉 Sistem artık .env dosyası tabanlı çalışıyor - Tüm cihazlarda senkronize!"w/tv-monitoringh
+
+echo "🔄 Basit güncelleme başlıyor..."
+
 # Proje dizinine# API sunucusunu başlat - .env sistemi
 echo "� API sunucusu başlatılıyor (.env sistemi)..."
 sudo systemctl start tv-monitoring-api

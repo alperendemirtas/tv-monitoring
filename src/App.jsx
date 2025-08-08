@@ -34,27 +34,7 @@ function App() {
     return 'humidity-high'
   }
 
-  // Sunucudan ayarları çek (TV için) - Basitleştirilmiş versiyon
-  const fetchConfigFromServer = async () => {
-    try {
-      // Önce localStorage'dan kontrol et
-      const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
-      const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
-      
-      if (savedOpmanagerUrl || savedSensiboApiKey) {
-        setOpmanagerUrl(savedOpmanagerUrl)
-        setSensiboApiKey(savedSensiboApiKey)
-        setIsConfigured(true)
-        return true
-      }
-      return false
-    } catch (err) {
-      console.error('Config yüklenemedi:', err)
-      return false
-    } finally {
-      setConfigLoading(false)
-    }
-  }
+  // localStorage ayar yönetimi - Basitleştirilmiş
 
   // Ayarları sunucuya kaydet - Basitleştirilmiş (sadece localStorage)
   const saveConfigToServer = async (opmanager, sensibo) => {
@@ -69,7 +49,7 @@ function App() {
     }
   }
 
-  // Sayfa yüklendiğinde önce sunucudan, sonra localStorage'dan verileri oku
+  // Sayfa yüklendiğinde ayarları kontrol et - Basitleştirilmiş
   useEffect(() => {
     const initializeConfig = async () => {
       // URL parametrelerini kontrol et
@@ -77,57 +57,36 @@ function App() {
       const urlOpmanager = urlParams.get('opmanager')
       const urlSensibo = urlParams.get('sensibo')
       
-      // URL parametresi varsa direkt kullan
+      // URL parametresi varsa direkt kullan ve localStorage'a da kaydet
       if (urlOpmanager || urlSensibo) {
-        if (urlOpmanager) setOpmanagerUrl(decodeURIComponent(urlOpmanager))
-        if (urlSensibo) setSensiboApiKey(urlSensibo)
+        if (urlOpmanager) {
+          const decodedUrl = decodeURIComponent(urlOpmanager)
+          setOpmanagerUrl(decodedUrl)
+          localStorage.setItem('opmanagerUrl', decodedUrl)
+        }
+        if (urlSensibo) {
+          setSensiboApiKey(urlSensibo)
+          localStorage.setItem('sensiboApiKey', urlSensibo)
+        }
         setIsConfigured(true)
         setConfigLoading(false)
         return
       }
 
-      // Sunucudan ayarları çekmeye çalış (sadece localStorage)
-      const serverConfigLoaded = await fetchConfigFromServer()
+      // localStorage'dan ayarları yükle
+      const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
+      const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
       
-      if (!serverConfigLoaded) {
-        // Sunucuda ayar yoksa localStorage'dan oku
-        const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
-        const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
-        
-        setOpmanagerUrl(savedOpmanagerUrl)
-        setSensiboApiKey(savedSensiboApiKey)
-        setIsConfigured(!!(savedOpmanagerUrl || savedSensiboApiKey))
-      }
+      setOpmanagerUrl(savedOpmanagerUrl)
+      setSensiboApiKey(savedSensiboApiKey)
+      setIsConfigured(!!(savedOpmanagerUrl || savedSensiboApiKey))
+      setConfigLoading(false)
     }
 
     initializeConfig()
   }, [serverIp])
 
-  // Ayarları kontrol etmek için polling - Basitleştirilmiş
-  useEffect(() => {
-    let configInterval
-    
-    if (!isConfigured) {
-      configInterval = setInterval(async () => {
-        // Sadece localStorage'u kontrol et
-        const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
-        const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
-        
-        if (savedOpmanagerUrl || savedSensiboApiKey) {
-          setOpmanagerUrl(savedOpmanagerUrl)
-          setSensiboApiKey(savedSensiboApiKey)
-          setIsConfigured(true)
-          clearInterval(configInterval)
-        }
-      }, 5000) // 5 saniyede bir kontrol et
-    }
-
-    return () => {
-      if (configInterval) {
-        clearInterval(configInterval)
-      }
-    }
-  }, [isConfigured, serverIp])
+  // Polling kaldırıldı - Artık sadece localStorage kullanılıyor
 
   // Sensibo verilerini çek
   const fetchSensiboData = async () => {
@@ -261,24 +220,20 @@ function App() {
     }
   }
 
-  // Yapılandırma bekleme ekranı
+  // Yapılandırma yükleme ekranı - Sadece hızlı yükleme için
   if (configLoading) {
     return (
       <div className="app">
         <div className="config-loading">
           <div className="loading-spinner"></div>
-          <h2>Ayarlar yükleniyor...</h2>
-          <p>Lütfen bekleyin</p>
+          <h2>Yükleniyor...</h2>
         </div>
       </div>
     )
   }
 
-  // Yapılandırma bekleme ekranı (TV için) - Devre dışı, direkt ayarlar ekranı
-  if (!isConfigured && !configLoading) {
-    // TV bekleme ekranı yerine direkt normal ekranı göster
-    // return ... (bu kısım kaldırıldı)
-  }
+  // Yapılandırma bekleme ekranı - TAMAMEN KALDIRILDI
+  // Artık her zaman ana dashboard gösterilecek
 
   return (
     <div className="app">
@@ -419,12 +374,15 @@ function App() {
                   <div className="tv-tip-text">
                     Bilgisayardan şu formatta link hazırla:<br/>
                     <code>
-                      http://SERVER_IP/?opmanager=OPMANAGER_URL&sensibo=API_KEY
+                      http://{serverIp}/?opmanager=OPMANAGER_URL&sensibo=API_KEY
                     </code>
                   </div>
                   <div className="tv-example">
                     <strong>Örnek:</strong><br/>
-                    <small>http://10.10.11.164/?opmanager=https%3A//example.com&sensibo=abc123</small>
+                    <small>http://{serverIp}/?opmanager=https%3A//example.com&sensibo=abc123</small>
+                  </div>
+                  <div className="tv-note">
+                    💡 <strong>Not:</strong> Ayarlar kaydedildiğinde tüm tarayıcılarda görünür olacak
                   </div>
                 </div>
               </div>

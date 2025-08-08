@@ -28,9 +28,9 @@ sudo systemctl restart nginx
 echo "✅ Güncelleme tamamlandı!"
 echo "🌐 Site adresi: http://10.10.11.164"
 
-# API sunucusunu durduralım artık gerek yok
-echo "🛑 API sunucusu durduruluyor (artık gerek yok)..."
-sudo systemctl stop tv-monitoring-api
-sudo systemctl disable tv-monitoring-api
+# API sunucusunu başlat
+echo "� API sunucusu başlatılıyor..."
+sudo systemctl start tv-monitoring-api
+sudo systemctl enable tv-monitoring-api
 
-echo "🎉 Sistem artık sadece localStorage ile çalışıyor!"
+echo "🎉 Sistem artık sunucu tabanlı çalışıyor - Tüm cihazlarda senkronize!"

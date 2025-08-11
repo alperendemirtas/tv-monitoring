@@ -72,8 +72,9 @@ function App() {
       if (data.success && data.config) {
         const { opmanagerUrl: serverOpmanager, sensiboApiKey: serverSensibo } = data.config
         
-        if (serverOpmanager) setOpmanagerUrl(serverOpmanager)
-        if (serverSensibo) setSensiboApiKey(serverSensibo)
+        // API key'de space trim'le
+        if (serverOpmanager) setOpmanagerUrl(serverOpmanager.trim())
+        if (serverSensibo) setSensiboApiKey(serverSensibo.trim())
         return true
       }
       return false
@@ -83,8 +84,8 @@ function App() {
       const savedOpmanagerUrl = localStorage.getItem('opmanagerUrl') || ''
       const savedSensiboApiKey = localStorage.getItem('sensiboApiKey') || ''
       
-      if (savedOpmanagerUrl) setOpmanagerUrl(savedOpmanagerUrl)
-      if (savedSensiboApiKey) setSensiboApiKey(savedSensiboApiKey)
+      if (savedOpmanagerUrl) setOpmanagerUrl(savedOpmanagerUrl.trim())
+      if (savedSensiboApiKey) setSensiboApiKey(savedSensiboApiKey.trim())
       return !!(savedOpmanagerUrl || savedSensiboApiKey)
     }
   }
@@ -183,8 +184,12 @@ function App() {
     setError('')
 
     try {
+      // URL'i debug için logla
+      const apiUrl = `/api/sensibo/users/me/pods?fields=id,room,acState&apiKey=${sensiboApiKey.trim()}`
+      console.log('Sensibo API URL:', apiUrl)
+      
       // Vite proxy üzerinden çağrı yap - acState'i de çek
-      const response = await fetch(`/api/sensibo/users/me/pods?fields=id,room,acState&apiKey=${sensiboApiKey}`, {
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -448,14 +453,14 @@ function App() {
                   type="text"
                   placeholder="OpManager Linki"
                   value={opmanagerUrl}
-                  onChange={(e) => setOpmanagerUrl(e.target.value)}
+                  onChange={(e) => setOpmanagerUrl(e.target.value.trim())}
                   className="settings-input"
                 />
                 <input
                   type="password"
                   placeholder="Sensibo API Anahtarı"
                   value={sensiboApiKey}
-                  onChange={(e) => setSensiboApiKey(e.target.value)}
+                  onChange={(e) => setSensiboApiKey(e.target.value.trim())}
                   className="settings-input"
                 />
                 <button onClick={handleSaveSettings} className="save-button">
@@ -490,7 +495,7 @@ function App() {
                   type="text"
                   placeholder="https://example.com/dashboard"
                   value={opmanagerUrl}
-                  onChange={(e) => setOpmanagerUrl(e.target.value)}
+                  onChange={(e) => setOpmanagerUrl(e.target.value.trim())}
                   className="modal-input"
                 />
                 <small>Üst panelde görüntülenecek OpManager linkini girin</small>
@@ -503,7 +508,7 @@ function App() {
                   type="password"
                   placeholder="API anahtarınızı girin"
                   value={sensiboApiKey}
-                  onChange={(e) => setSensiboApiKey(e.target.value)}
+                  onChange={(e) => setSensiboApiKey(e.target.value.trim())}
                   className="modal-input"
                 />
                 <small>Sensibo cihaz verilerini almak için API anahtarı gerekli</small>

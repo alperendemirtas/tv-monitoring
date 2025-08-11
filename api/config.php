@@ -55,8 +55,8 @@ try {
         $envVars = readEnvFile($envFile);
         
         $config = [
-            'opmanagerUrl' => $envVars['OPMANAGER_URL'] ?? '',
-            'sensiboApiKey' => $envVars['SENSIBO_API_KEY'] ?? ''
+            'opmanagerUrl' => trim($envVars['OPMANAGER_URL'] ?? ''),
+            'sensiboApiKey' => trim($envVars['SENSIBO_API_KEY'] ?? '')
         ];
         
         echo json_encode([
@@ -74,9 +74,9 @@ try {
         
         $currentEnv = readEnvFile($envFile);
         
-        // Yeni değerleri güncelle
-        $currentEnv['OPMANAGER_URL'] = $input['opmanagerUrl'] ?? '';
-        $currentEnv['SENSIBO_API_KEY'] = $input['sensiboApiKey'] ?? '';
+        // Yeni değerleri güncelle - trim ile
+        $currentEnv['OPMANAGER_URL'] = trim($input['opmanagerUrl'] ?? '');
+        $currentEnv['SENSIBO_API_KEY'] = trim($input['sensiboApiKey'] ?? '');
         
         if (writeEnvFile($envFile, $currentEnv)) {
             echo json_encode([

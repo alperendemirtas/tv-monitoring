@@ -192,6 +192,9 @@ function App() {
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Sensibo API rate limit aşıldı. Lütfen birkaç dakika bekleyin.')
+        }
         throw new Error(`API Hatası: ${response.status}`)
       }
 
